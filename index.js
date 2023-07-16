@@ -1,0 +1,35 @@
+// Import 
+const express = require("express"); // Import express library
+const cors = require("cors"); // Import cors
+const mainRouter = require("./src/router/index"); // Import main router
+const app = express();
+const commonResponse = require("./src/common/response") // Import Template Response
+
+
+// Use middleware
+app.use(express.json());
+app.use(cors());
+
+// Port choice
+const port = process.env.PORT || 4000;
+
+// use Main Router
+app.use("/", mainRouter);
+app.all("*", (req, res, next) => {
+    next(commonResponse.response(res, null, 404, "URL not Found"));
+});
+
+//Error code and message
+app.use((err, req, res) => {
+    if (err && err.message === "File too large"){
+        return commonResponse.response(res, null, 413, "Image size too large (Max 2MB)")
+    }
+    // const messageError = err.message || "Internal server error";
+    const statusCode = err.status || 500;
+    res.status(statusCode).json(err)
+})
+
+// Listening port awaiting requests
+app.listen(port, () => {
+    console.log(`Server run on port: ${port}`);
+});
