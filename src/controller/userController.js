@@ -130,27 +130,6 @@ const loginUser = async (req, res) => {
     return commonResponse.response(res, selectResult.rows, 200, "Login success")
 }
 
-// const registerUser = async (req, res) => {
-//     // Generate Id
-//     req.body.queryId = uuidv4()
-//     // Email lowecase
-//     req.body.email = req.body.email.toLowerCase();
-//     // Creating hash password
-//     const salt = bcrypt.genSaltSync(10);
-//     req.body.queryPwd = bcrypt.hashSync(req.body.password, salt);
-//     try {
-//         const insertResult = await userModel.insertUser(req.body)
-//         return commonResponse.response(res, insertResult.rows, 200, "User added")
-//     } catch (error) {
-//         console.log(error)
-//         if (error.detail && error.detail.includes('already exists.')) {
-//             return commonResponse.response(res, null, 400, "User email already exist")
-//         } else {
-//             return commonResponse.response(res, null, 500, "Failed to add user")
-//         }
-//     }
-// }
-
 const registerUser = async (req, res) => {
     // Email lowecase
     req.body.email = req.body.email.toLowerCase();

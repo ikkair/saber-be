@@ -49,9 +49,9 @@ const addPickup = async (req, res) => {
     } catch (error) {
         console.log(error)
         if (error.detail && error.detail.includes('is not present in table "users".')) {
-            return commonHelper.response(res, null, 400, "User id is not present in table users")
+            return commonResponse.response(res, null, 400, "User id is not present in table users")
         } else {
-            return commonHelper.response(res, null, 500, "Failed to add pickup")
+            return commonResponse.response(res, null, 500, "Failed to add pickup")
         }
     }
 }
@@ -70,11 +70,7 @@ const editPickup = async (req, res) => {
         }
     } catch (error) {
         console.log(error)
-        if (error.detail && error.detail.includes('already exists.')) {
-            return commonResponse.response(res, null, 400, "Pickup name already exist")
-        } else {
-            return commonResponse.response(res, null, 500, "Failed to update pickup")
-        }
+        return commonResponse.response(res, null, 500, "Failed to update pickup")
     }
 }
 
