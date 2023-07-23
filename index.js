@@ -27,9 +27,8 @@ app.use((err, req, res) => {
     if (err && err.message === "File too large"){
         return commonResponse.response(res, null, 413, "Image size too large (Max 2MB)")
     }
-    // const messageError = err.message || "Internal server error";
-    const statusCode = err.status || 500;
-    res.status(statusCode).json(err)
+    console.log(err)
+    return commonResponse.response(res, null, 500, "err")
 })
 
 // Listening port awaiting requests
