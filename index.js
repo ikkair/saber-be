@@ -9,8 +9,8 @@ const commonResponse = require("./src/common/response") // Import Template Respo
 // Use middleware
 app.use(express.json());
 app.use(cors({
-  "origin": "*",
-  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+  origin: ['*'],
+     methods: ["GET","PUT","POST","DELETE"]
 }));
 
 // Port choice
