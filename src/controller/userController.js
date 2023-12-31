@@ -17,7 +17,7 @@ const bcrypt = require("bcryptjs");
 const commonAuth = require("../common/auth");
 
 // Import Helper for Email
-const { sendMail } = require("../config/mail");
+const { sendCurrentPasswordMail, sendActivationMail, sendConfirmationMail } = require("../config/mail");
 
 // Import upload google
 const {
@@ -109,25 +109,81 @@ const loginUser = async (req, res) => {
         console.log(error)
         return commonResponse.response(res, null, 500, "Failed to get detail email")
     }
-    // Check password
-    const isPasswordValid = bcrypt.compareSync(
-        req.body.password,
-        selectResult.rows[0].password
-    )
-    delete selectResult.rows[0].password
-    if(!isPasswordValid){
-        return commonResponse.response(res, null, 400, "Password invalid")
+    try {
+        // Check password
+        const isPasswordValid = bcrypt.compareSync(
+            req.body.password,
+            selectResult.rows[0].password
+        )
+        delete selectResult.rows[0].password
+        if(!isPasswordValid){
+            return commonResponse.response(res, null, 400, "Password invalid")
+        }
+    } catch (error) {
+        console.log(error)
+        return commonResponse.response(res, null, 500, "Failed to get detail email")
     }
     const payload = {
         id: selectResult.rows[0].id,
-        role: "user"
+        role: selectResult.rows[0].role
     };
     const token = commonAuth.generateToken(payload);
-    const refreshToken = commonAuth.generateRefreshToken(payload);
-    selectResult.rows[0].role = "user"
     selectResult.rows[0].token = token
-    selectResult.rows[0].refreshToken = refreshToken
     return commonResponse.response(res, selectResult.rows, 200, "Login success")
+}
+
+const verificationForgotPassword = async (req, res) => {
+    const token = req.query.token;
+    let payload;
+    try {
+        payload = jwt.verify(token, process.env.SECRET_KEY_JWT);
+    } catch (error) {
+        if (error && error.name === "JsonWebTokenError") {
+            return commonResponse.response(res, null, 401, "Token invalid");
+        } else if (error && error.name === "TokenExpiredError") {
+            return commonResponse.response(res, null, 403, "Token expired");
+        } else {
+            console.log(error)
+            return commonResponse.response(res, null, 401, "Token not active");
+        }
+    }
+    let result;
+    try {
+        result = await userModel.selectUserByEmail(payload.email)
+        if (result.rowCount < 1){
+            return commonResponse.response(res, null, 404, "Account not found");
+        }
+        // Creating hash password
+        const salt = bcrypt.genSaltSync(10);
+        const currPwd = uuidv4()
+        const pwd = bcrypt.hashSync(currPwd, salt);
+        await userModel.updatePasswordUser({
+            queryId: result.rows[0].id,
+            queryPwd: pwd
+        })
+        sendCurrentPasswordMail(currPwd, payload.email)
+    } catch (err) {
+        console.log(err)
+        return commonResponse.response(res, null, 500, err.detail);
+    }
+}
+
+const forgotPasswordUser = async (req, res) => {
+    req.body.email = req.body.email.toLowerCase();
+    try {
+        const result = await userModel.selectUserByEmail(req.body.email);
+        if (result.rowCount > 0){
+            const payload = {
+                email: req.body.email,
+            }
+            const token = commonAuth.generateVerificationToken(payload)
+            sendConfirmationMail(token, req.body.email);
+            return commonResponse.response(res, null, 200, "Forgot password requestd please check your email");
+        }
+    } catch (err) {
+        console.log(err)
+        return commonResponse.response(res, null, 500, err.detail);
+    }
 }
 
 const registerUser = async (req, res) => {
@@ -138,20 +194,20 @@ const registerUser = async (req, res) => {
         if (result.rowCount > 0) {
             return commonResponse.response(res, null, 400, "Email already used");
         }
+        // Creating hash password
+        const salt = bcrypt.genSaltSync(10);
+        req.body.queryPwd = bcrypt.hashSync(req.body.password, salt);
     } catch (err) {
         console.log(err);
         return commonResponse.response(res, null, 500, err.detail);
     }
-    // Creating hash password
-    const salt = bcrypt.genSaltSync(10);
-    req.body.queryPwd = bcrypt.hashSync(req.body.password, salt);
     const payload = {
         name: req.body.name,
         email: req.body.email,
         queryPwd: req.body.queryPwd
     }
     const token = commonAuth.generateVerificationToken(payload)
-    sendMail(token, req.body.email);
+    sendActivationMail(token, req.body.email);
     commonResponse.response(res, null, 200, "Check your email");
 }
 
@@ -196,6 +252,9 @@ const editUser = async (req, res) => {
     }
     // Update other field
     try {
+        // Creating hash password
+        const salt = bcrypt.genSaltSync(10);
+        req.body.queryPwd = bcrypt.hashSync(req.body.password, salt);
         const updateResult = await userModel.updateUser(req.body)
         return commonResponse.response(res, updateResult.rows, 200, "User edited")
     } catch (error) {
@@ -244,6 +303,8 @@ module.exports = {
     getAllUsers,
     getDetailUser,
     verificationUser,
+    verificationForgotPassword,
+    forgotPasswordUser,
     loginUser,
     registerUser,
     editUser,

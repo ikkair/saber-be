@@ -10,13 +10,23 @@ const uploadMiddle = require("../middleware/upload.js");
 
 // Import auth
 const authMiddle = require("../middleware/auth");
+const withdrawMiddle = require("../middleware/withdrawalMiddleware");
 
 // Routes
 router.get("/", withdrawaController.getAllWithdrawals)
 router.get("/:id", withdrawaController.getDetailWithdrawal)
-router.post("/", withdrawaController.addWithdrawal)
-router.put("/:id", withdrawaController.editWithdrawal)
-router.delete("/:id", withdrawaController.deleteWithdrawal)
+router.post("/", 
+                authMiddle.protect,
+                authMiddle.notCourier,
+                withdrawMiddle.ifUser,
+                withdrawMiddle.isOldEnough,
+                withdrawMiddle.isBalanceEnough,
+                withdrawaController.addWithdrawal
+            )
+// Withdrawal cannot be edited
+// router.put("/:id", withdrawaController.editWithdrawal)
+// Withdrawal cannot be deleted
+// router.delete("/:id", withdrawaController.deleteWithdrawal)
 
 // Export
 module.exports = router

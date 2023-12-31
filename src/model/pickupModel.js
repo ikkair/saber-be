@@ -1,7 +1,11 @@
 const Pool = require("../config/db")
 
 const selectAllPickups = () => {
-  return Pool.query(`SELECT * FROM pickups`)
+  return Pool.query(`SELECT * FROM pickups ORDER BY time`)
+}
+
+const selectWaitingTrashes = (queryId) => {
+  return Pool.query(`SELECT count(*) FROM trashes INNER JOIN pickups ON pickups.id=trashes.pickup_id WHERE pickups.id='${queryId}' AND trashes.status='waiting'`)
 }
 
 const selectDetailPickup = (queryId) => {
@@ -15,6 +19,26 @@ const insertPickup = (queryObject) => {
     `VALUES('${queryId}', '${address}', '${user_id}', '${time}')`
   );
 }
+
+const updatePickupCourier = (queryObject) => {
+  const { pickup_id, status} = queryObject
+  return Pool.query(
+    `UPDATE pickups SET status='${status}'` +
+    `WHERE id='${pickup_id}'`
+  );
+}
+
+const updatePickupBalance = (queryObject) => {
+  const { queryId } = queryObject
+  return Pool.query(
+    `UPDATE pickups 
+    SET balance=(SELECT SUM(trashes.weight * trash_types.amount)
+    FROM trashes INNER JOIN trash_types ON trashes.type=trash_types.id
+    WHERE trashes.pickup_id='${queryId}' AND trashes.status='accepted')
+    WHERE EXISTS (SELECT 1 FROM trashes WHERE trashes.pickup_id='${queryId}' AND trashes.status='accepted')`
+  );
+}
+
 
 const updatePickup = (queryObject) => {
   const { queryId, address, time} = queryObject
@@ -31,7 +55,10 @@ const deletePickup = (queryId) => {
 module.exports = {
   selectAllPickups,
   selectDetailPickup,
+  selectWaitingTrashes,
   insertPickup,
+  updatePickupBalance,
   updatePickup,
+  updatePickupCourier,
   deletePickup
 }

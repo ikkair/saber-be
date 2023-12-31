@@ -14,9 +14,9 @@ const authMiddle = require("../middleware/auth");
 // Routes
 router.get("/", trashTypeController.getAllTrashTypes)
 router.get("/:id", trashTypeController.getDetailTrashType)
-router.post("/", trashTypeController.addTrashType)
-router.put("/:id", trashTypeController.editTrashType)
-router.delete("/:id", trashTypeController.deleteTrashType)
+router.post("/", authMiddle.protect, authMiddle.onlyAdmin, trashTypeController.addTrashType)
+router.put("/:id", authMiddle.protect, authMiddle.onlyAdmin, trashTypeController.editTrashType)
+router.delete("/:id", authMiddle.protect, authMiddle.onlyAdmin, trashTypeController.deleteTrashType)
 
 // Export
 module.exports = router

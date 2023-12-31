@@ -1,5 +1,6 @@
 // Import model
 const withdrawalModel = require("../model/withdrawalModel")
+const userModel = require("../model/userModel")
 
 // Import random id
 const { v4: uuidv4 } = require("uuid")
@@ -44,14 +45,16 @@ const addWithdrawal = async (req, res) => {
     // Generate Id
     req.body.queryId = uuidv4()
     try {
+        console.log(req.body)
         const insertResult = await withdrawalModel.insertWithdrawal(req.body)
+        await userModel.updateUserBalance({queryId: req.body.user_id})
         return commonResponse.response(res, insertResult.rows, 200, "Withdrawal added")
     } catch (error) {
         console.log(error)
         if (error.detail && error.detail.includes('is not present in table "users".')) {
-            return commonHelper.response(res, null, 400, "User id is not present in table users")
+            return commonResponse.response(res, null, 400, "User id is not present in table users")
         } else {
-            return commonHelper.response(res, null, 500, "Failed to add withdrawal")
+            return commonResponse.response(res, null, 500, "Failed to add withdrawal")
         }
     }
 }

@@ -1,6 +1,27 @@
 const jwt = require("jsonwebtoken");
 const commonResponse = require("../common/response");
 
+const onlyCourier = (req, res, next) => {
+    if (req.payload.role !== 'courier'){
+        return commonResponse.response(res, null, 403, "Insufficient privilage")
+    }
+    next()
+}
+
+const onlyAdmin = (req, res, next) => {
+    if (req.payload.role !== 'admin'){
+        return commonResponse.response(res, null, 403, "Insufficient privilage")
+    }
+    next()
+}
+
+const notCourier = (req, res, next) => {
+    if (req.payload.role == 'courier'){
+        return commonResponse.response(res, null, 403, "Insufficient privilage")
+    }
+    next()
+}
+
 const protect = (req, res, next) => {
     try {
         let token;
@@ -28,4 +49,9 @@ const protect = (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+module.exports = { 
+    protect,
+    notCourier,
+    onlyAdmin,
+    onlyCourier
+};

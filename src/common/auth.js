@@ -18,12 +18,4 @@ const generateVerificationToken = (payload) => {
     return token;
 };
 
-const generateRefreshToken = (payload) => {
-    const verifyOpts = {
-        expiresIn: "1d",
-    };
-    const token = jwt.sign(payload, process.env.SECRET_KEY_JWT, verifyOpts);
-    return token;
-};
-
-module.exports = { generateToken, generateRefreshToken, generateVerificationToken };
+module.exports = { generateToken, generateVerificationToken };

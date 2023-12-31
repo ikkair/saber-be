@@ -18,12 +18,17 @@ const port = process.env.PORT || 4000;
 
 // use Main Router
 app.use("/", mainRouter);
-app.all("*", (req, res, next) => {
+app.use(( _req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
+
+app.all("*", (_req, res, next) => {
     next(commonResponse.response(res, null, 404, "URL not Found"));
 });
 
 //Error code and message
-app.use((err, req, res) => {
+app.use((err, _req, res) => {
     if (err && err.message === "File too large"){
         return commonResponse.response(res, null, 413, "Image size too large (Max 2MB)")
     }

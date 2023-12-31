@@ -25,7 +25,7 @@ const updateTrashType = (queryObject) => {
 }
 
 const deleteTrashType = (queryId) => {
-  return Pool.query(`DELETE FROM trash_type WHERE id='${queryId}'`)
+  return Pool.query(`DELETE FROM trash_types WHERE id='${queryId}'`)
 }
 
 module.exports = {

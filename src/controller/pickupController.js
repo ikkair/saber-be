@@ -1,5 +1,6 @@
 // Import model
 const pickupModel = require("../model/pickupModel")
+const userModel = require("../model/userModel")
 
 // Import random id
 const { v4: uuidv4 } = require("uuid")
@@ -12,7 +13,7 @@ const getAllPickups = async (req, res) => {
     const queryLimit = req.query.limit
     try {
         const selectResult = await pickupModel.selectAllPickups(queryLimit)
-        if (selectResult.rowCount > 0){
+        if (selectResult.rowCount > 0) {
             return commonResponse.response(res, selectResult.rows, 200, "Get all pickups success")
         } else {
             return commonResponse.response(res, null, 404, "No pickups available")
@@ -41,6 +42,10 @@ const getDetailPickup = async (req, res) => {
 }
 
 const addPickup = async (req, res) => {
+    if (req.payload.role == "user") {
+        // Get user id from jwt
+        req.body.user_id = req.payload.id
+    }
     // Generate Id
     req.body.queryId = uuidv4()
     try {
@@ -53,6 +58,35 @@ const addPickup = async (req, res) => {
         } else {
             return commonResponse.response(res, null, 500, "Failed to add pickup")
         }
+    }
+}
+
+const editPickupCourierStatus = async (req, res) => {
+    try {
+        if (req.body.status == "success") {
+            const result = await pickupModel.selectWaitingTrashes(req.body.pickup_id)
+            if (result.rows[0].count > 0) {
+                return commonResponse.response(res, null, 403, "Currently, there are still some trash items that have not been accepted")
+            }
+            await pickupModel.updatePickupBalance({ queryId: req.body.pickup_id })
+            const updateResult = await pickupModel.updatePickupCourier(req.body)
+            await userModel.updateUserBalance({queryId: req.body.user_id})
+            if (updateResult.rowCount > 0) {
+                return commonResponse.response(res, updateResult.rows, 200, "Pickup edited")
+            } else {
+                return commonResponse.response(res, null, 404, "Pickup not found")
+            }
+        } else {
+            const updateResult = await pickupModel.updatePickupCourier(req.body)
+            if (updateResult.rowCount > 0) {
+                return commonResponse.response(res, updateResult.rows, 200, "Pickup edited")
+            } else {
+                return commonResponse.response(res, null, 404, "Pickup not found")
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return commonResponse.response(res, null, 500, "Failed to update pickup")
     }
 }
 
@@ -95,5 +129,6 @@ module.exports = {
     getDetailPickup,
     addPickup,
     editPickup,
+    editPickupCourierStatus,
     deletePickup
 }
