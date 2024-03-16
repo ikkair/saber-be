@@ -3,11 +3,13 @@ const express = require("express"); // Import express library
 const cors = require("cors"); // Import cors
 const mainRouter = require("./src/router/index"); // Import main router
 const app = express();
-const commonResponse = require("./src/common/response") // Import Template Response
+const morgan = require("morgan");
+const commonResponse = require("./src/common/response"); // Import Template Response
 
 
 // Use middleware
 app.use(express.json());
+app.use(morgan("dev"));
 app.use(cors({
   origin: ['*'],
      methods: ["GET","PUT","POST","DELETE"]
