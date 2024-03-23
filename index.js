@@ -30,7 +30,7 @@ app.all("*", (_req, res, next) => {
 });
 
 //Error code and message
-app.use((err, _req, res) => {
+app.use((err, _req, res, _next) => {
     if (err && err.message === "File too large"){
         return commonResponse.response(res, null, 413, "Image size too large (Max 2MB)")
     }

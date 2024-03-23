@@ -13,4 +13,4 @@ const response = (res, result, status, message, pagination) => {
     res.status(status).json(resultPrint);
 };
 
-module.exports = { response };
+module.exports = { response }
