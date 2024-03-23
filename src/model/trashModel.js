@@ -19,7 +19,7 @@ const insertTrash = (queryObject) => {
 const updateTrash = (queryObject) => {
   const { queryId, description, type, weight } = queryObject
   return Pool.query(
-    `UPDATE trashes SET description='${description}', type='${type}', weight='${weight}'` +
+    `UPDATE trashes SET description='${description}', trash_type_id='${type}', weight_kg='${weight}'` +
     `WHERE id='${queryId}'`
   );
 }
