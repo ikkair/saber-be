@@ -11,7 +11,7 @@ const selectDetailTrash = (queryId) => {
 const insertTrash = (queryObject) => {
   const { queryId, description, type, weight, photo, pickup_id } = queryObject
   return Pool.query(
-    `INSERT INTO trashes(id, description, type, weight, photo, pickup_id)` +
+    `INSERT INTO trashes(id, description, trash_type_id, weight_kg, photo, pickup_id)` +
     `VALUES('${queryId}', '${description}', '${type}', '${weight}', '${photo}', '${pickup_id}')`
   );
 }
