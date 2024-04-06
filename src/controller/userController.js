@@ -230,8 +230,8 @@ const editUser = async (req, res) => {
     const oldPhoto = selectResult.rows[0].photo;
     if (req.file) {
         try {
-            if (oldPhoto != "undefined" && oldPhoto != "photo.jpg" && oldPhoto != "") {
-                const oldPhotoId = oldPhoto.split("=")[1];
+            if (oldPhoto != "undefined" && oldPhoto != "photo.jpg" && oldPhoto != "" && oldPhoto != "null") {
+                const oldPhotoId = oldPhoto.split("/")[5];
                 const updateResult = await updatePhoto(
                     req.file,
                     oldPhotoId
@@ -241,7 +241,7 @@ const editUser = async (req, res) => {
             } else {
                 const uploadResult = await uploadPhoto(req.file);
                 const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-                req.body.queryFilename = parentPath.concat(uploadResult.id);
+                req.body.queryFilename = parentPath.concat(uploadResult.id + "/view");
             }
         } catch (error) {
             console.log(error)
@@ -283,12 +283,11 @@ const deleteUser = async (req, res) => {
         return commonResponse.response(res, null, 500, "Failed to get data user")
     }
     // Declare variable for holding query result
-    let deleteResult
     try {
-        deleteResult = await userModel.deleteUser(queryId)
+        const deleteResult = await userModel.deleteUser(queryId)
         const oldPhoto = selectResult.rows[0].photo;
         if (oldPhoto != "undefined" && oldPhoto != "photo.jpg" && oldPhoto != "") {
-            const oldPhotoId = oldPhoto.split("=")[1];
+            const oldPhotoId = oldPhoto.split("/")[5];
             await deletePhoto(oldPhotoId);
         }
         return commonResponse.response(res, deleteResult.rows, 200, "User deleted")

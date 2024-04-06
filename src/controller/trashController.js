@@ -7,6 +7,13 @@ const { v4: uuidv4 } = require("uuid")
 // Import Helper for Template Response
 const commonResponse = require("../common/response")
 
+// Import upload google
+const {
+    updatePhoto,
+    uploadPhoto,
+    deletePhoto,
+} = require("../config/googleDrive.config");
+
 const getAllTrashes = async (req, res) => {
     // Set params as const
     const queryLimit = req.query.limit
@@ -44,6 +51,11 @@ const addTrash = async (req, res) => {
     // Generate Id
     req.body.queryId = uuidv4()
     try {
+        if(req.file){
+            const uploadResult = await uploadPhoto(req.file);
+            const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
+            req.body.queryFilename = parentPath.concat(uploadResult.id + "/view");
+        }
         const insertResult = await trashModel.insertTrash(req.body)
         return commonResponse.response(res, insertResult.rows, 200, "Trash added")
     } catch (error) {
@@ -62,6 +74,41 @@ const editTrash = async (req, res) => {
     // Set param id as const
     const queryId = req.params.id
     req.body.queryId = queryId
+    // Declare variable for holding query result
+    let selectResult
+    try {
+        selectResult = await trashModel.selectDetailTrash(queryId)
+        if (selectResult.rowCount < 1) {
+            return commonResponse.response(res, null, 404, "Trash not found")
+        }
+    } catch (error) {
+        console.log(error)
+        return commonResponse.response(res, null, 500, "Failed to get data trash")
+    }
+    // Update the old photo
+    const oldPhoto = selectResult.rows[0].photo;
+    if (req.file) {
+        try {
+            if (oldPhoto != "undefined" && oldPhoto != "photo.jpg" && oldPhoto != "" && oldPhoto != "null") {
+                const oldPhotoId = oldPhoto.split("/")[5];
+                const updateResult = await updatePhoto(
+                    req.file,
+                    oldPhotoId
+                );
+                const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
+                req.body.queryFilename = parentPath.concat(updateResult.id);
+            } else {
+                const uploadResult = await uploadPhoto(req.file);
+                const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
+                req.body.queryFilename = parentPath.concat(uploadResult.id + "/view");
+            }
+        } catch (error) {
+            console.log(error)
+            return commonResponse.response(res, null, 500, "Failed to update user photo")
+        }
+    } else {
+        req.body.queryFilename = oldPhoto
+    }
     // Update other field
     try {
         const updateResult = await trashModel.updateTrash(req.body)
@@ -83,13 +130,25 @@ const editTrash = async (req, res) => {
 const deleteTrash = async (req, res) => {
     // Set param id as const
     const queryId = req.params.id
+    // Declare variable for holding query result
+    let selectResult
     try {
-        const deleteResult = await trashModel.deleteTrash(queryId)
-        if (deleteResult.rowCount > 0) {
-            return commonResponse.response(res, deleteResult.rows, 200, "Trash deleted")
-        } else {
+        selectResult = await trashModel.selectDetailTrash(queryId)
+        if (selectResult.rowCount < 1) {
             return commonResponse.response(res, null, 404, "Trash not found")
         }
+    } catch (error) {
+        console.log(error)
+        return commonResponse.response(res, null, 500, "Failed to get data trash")
+    }
+    try {
+        const deleteResult = await trashModel.deleteTrash(queryId)
+        const oldPhoto = selectResult.rows[0].photo;
+        if (oldPhoto != "undefined" && oldPhoto != "photo.jpg" && oldPhoto != "") {
+            const oldPhotoId = oldPhoto.split("/")[5];
+            await deletePhoto(oldPhotoId);
+        }
+        return commonResponse.response(res, deleteResult.rows, 200, "Trash deleted")
     } catch (error) {
         console.log(error)
         return commonResponse.response(res, null, 500, "Failed to delete trash")

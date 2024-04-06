@@ -14,8 +14,8 @@ const authMiddle = require("../middleware/auth");
 // Routes
 router.get("/", trashController.getAllTrashes)
 router.get("/:id", trashController.getDetailTrash)
-router.post("/", authMiddle.protect, authMiddle.notCourier, trashController.addTrash)
-router.put("/:id", authMiddle.protect, trashController.editTrash)
+router.post("/", authMiddle.protect, authMiddle.notCourier, uploadMiddle.single("photo"), trashController.addTrash)
+router.put("/:id", authMiddle.protect, uploadMiddle.single("photo"), trashController.editTrash)
 router.delete("/:id", authMiddle.protect, authMiddle.notCourier, trashController.deleteTrash)
 
 // Export
