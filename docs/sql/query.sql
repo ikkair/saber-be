@@ -10,7 +10,7 @@ CREATE TABLE users (
   password CHAR(60) NOT NULL,
   role ROLE NOT NULL DEFAULT 'user',
   phone CHAR(15) DEFAULT NULL,
-  photo CHAR(32) DEFAULT NULL,
+  photo VARCHAR(100) DEFAULT NULL,
   balance NUMERIC(9,0) DEFAULT 0,
   creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -49,7 +49,7 @@ CREATE TABLE trashes (
   id CHAR(36) PRIMARY KEY,
   description TEXT DEFAULT NULL,
   weight_kg NUMERIC(3,2) NOT NULL DEFAULT 0,
-  photo CHAR(32) DEFAULT NULL,
+  photo VARCHAR(100) DEFAULT NULL,
   condition CONDITION NOT NULL DEFAULT 'waiting',
   pickup_id CHAR(36) NOT NULL,
   trash_type_id CHAR(36) NOT NULL,
