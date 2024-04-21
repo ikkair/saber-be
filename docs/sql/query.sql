@@ -48,7 +48,7 @@ CREATE TYPE CONDITION AS ENUM ( 'waiting', 'accepted', 'declined', 'change');
 CREATE TABLE trashes (
   id CHAR(36) PRIMARY KEY,
   description TEXT DEFAULT NULL,
-  weight_kg NUMERIC(3,2) NOT NULL DEFAULT 0,
+  weight_kg NUMERIC(5,2) NOT NULL DEFAULT 0,
   photo VARCHAR(100) DEFAULT NULL,
   condition CONDITION NOT NULL DEFAULT 'waiting',
   pickup_id CHAR(36) NOT NULL,
